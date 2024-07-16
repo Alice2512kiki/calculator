@@ -1,0 +1,68 @@
+import re
+
+#演算子の優先順位の定義
+
+precedence = {
+    '+':1,
+    '-':1,
+    '*':2,
+    '/':2
+    }
+#式を分解する
+def parse_expression(expression):
+    tokens = re.findall(r'\d+|\+|\-|\*|\/',expression)
+    return tokens
+
+#分解した式を個別に格納する
+def infix_to_rpn(tokens):
+    output = []
+    operators = []
+
+    for token in tokens:
+        if token.isdigit():#トークンが数字の場合
+            #数字は出力リストに直接追加
+            output.append(token)
+        elif token in precedence:#トークンが演算子の場合
+            #演算子のスタックのトップの演算子の優先順位が現在トークンの演算子の優先順位以上である限り
+            while (operators and operators[-1] in precedence and
+                    precedence[operators[-1]] >= precedence[token]):
+                #スタックから演算子をポップして出力リストに追加 
+                output.append(operators.pop())
+                #現在のトークンの演算子をスタックにプッシュ
+            operators.append(token)
+        elif token =='(': #トークンが左括弧の場合
+            operators.append(token)#左括弧は無条件でスタックにプッシュ
+        elif token ==')':#トークンが右括弧の場合
+            #スタックのトップが左括弧になるまでポップして出力リストに追加
+            while operators and operators[-1] != '(':
+                output.append(operators.pop())
+            #左括弧をスタックからポップ（出力リストに追加しない）
+            operators.pop()
+    #スタックに残った演算子をすべてポップして出力リストに追加
+    while operators:
+        output.append(operators.pop())
+
+    return output
+#逆ポーランド記法を計算する関数
+def calc(expression):
+    stack = []
+    operator = ['+','-','*','/']
+    for i in expression:
+        if i in operator:
+            #演算子である時はスタックから2つ取り出してその演算子に従い計算し、再度格納する
+            b,a = stack.pop(),stack.pop()
+            result = eval(f"{a} {i} {b}")
+            stack.append(result)
+        else:
+            stack.append(int(i))
+    return stack[0]
+
+#式を取得,計算
+expression = input("式を入れる")
+tokens = parse_expression(expression)
+rpn = infix_to_rpn(tokens)
+
+print("RPN",rpn)
+
+result = calc(rpn)
+print("結果",result)
